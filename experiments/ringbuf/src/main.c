@@ -46,8 +46,18 @@ void main(void)
         PRINT("    type: 0x%x, value: 0x%x\n", type, value);
     }
     
+    // try reading again with size 0 and a NULL buf
+    PRINT("\n[4] Reading with NULL buf and size 0...\n");
+    size = 0;
+    rval = sys_ring_buf_get(&ringbuf, &type, &value, NULL, &size);
+    if (rval == -EMSGSIZE) {
+        PRINT("    -EMSGSIZE (%d), SIZE: %d\n", rval, size);
+        PRINT("    type: 0x%x, value: 0x%x (NOTE: unchanged)\n", type, value);
+    }
+
     // try reading again with size 0 and a real buf
-    PRINT("\n[4] Reading with real buf and insufficient size 0...\n");
+    PRINT("\n[5] Reading with real buf and insufficient size 0...\n");
+    size = 0;
     uint32_t buf[3] = {0, 0, 0};
     rval = sys_ring_buf_get(&ringbuf, &type, &value, buf, &size);
     if (rval == -EMSGSIZE) {
@@ -56,7 +66,7 @@ void main(void)
     }
 
     // try reading again with size 2 and a real buf
-    PRINT("\n[5] Reading with real buf and sufficient size 2...\n");
+    PRINT("\n[6] Reading with real buf and sufficient size 2...\n");
     PRINT("    Data before call: buf: 0x%x, 0x%x\n", buf[0], buf[1]);
     size = 2;
     rval = sys_ring_buf_get(&ringbuf, &type, &value, buf, &size);
@@ -67,7 +77,7 @@ void main(void)
     }
 
     // try reading when empty
-    PRINT("\n[6] Reading past end with NULL buf and size 0...\n");
+    PRINT("\n[7] Reading past end with NULL buf and size 0...\n");
     size = 0;
     rval = sys_ring_buf_get(&ringbuf, &type, &value, NULL, &size);
     if (rval == -EAGAIN) {
