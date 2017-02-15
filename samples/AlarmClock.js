@@ -17,6 +17,10 @@ var baseColor = [0, 0, 128];
 var alarmColorOn = [128, 0, 0];
 var alarmColorOff = [128, 128, 128];
 
+// messages (16 chars)
+var noAlarmMessage = 'none            ';
+var expiredAlarmMessage = 'expired!        ';
+
 // Application
 
 var pins = require("arduino101_pins");
@@ -38,7 +42,7 @@ glcd.setColor(baseColor[0], baseColor[1], baseColor[2]);
 glcd.setCursorPos(0, 0);
 glcd.print('Alarm:');
 glcd.setCursorPos(0, 1);
-glcd.print('none');
+glcd.print(noAlarmMessage);
 
 var debounce = false;
 
@@ -84,12 +88,13 @@ function resetDebounce() {
 function updateLCD() {
     var time = perf.now();
     if (time >= stopTime) {
+        glcd.setCursorPos(0, 1);
+        glcd.print(expiredAlarmMessage);
+
         soundAlarm();
         clearInterval(timer);
         timer = null;
 
-        glcd.setCursorPos(0, 1);
-        glcd.print('none            ');
         displayWidth = 0;
         return;
     }
@@ -121,7 +126,7 @@ var timings = [62, 63, 62, 63, 62, 63, 62, 563,
 var index = 0;
 
 function soundAlarm() {
-    console.log("Alarm!");
+    console.log("Alarm expired!");
     index = 0;
     toggleAlarm();
 }
@@ -142,5 +147,7 @@ function toggleAlarm() {
             buzzer.write(false);
         }
         glcd.setColor(baseColor[0], baseColor[1], baseColor[2]);
+        glcd.setCursorPos(0, 1);
+        glcd.print(noAlarmMessage);
     }
 };
