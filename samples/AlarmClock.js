@@ -5,8 +5,19 @@
 
 console.log("Alarm Clock sample...");
 
+// Configuration
+
 // amount of time each button click should add to the alarm
 var minuteIncrement = 1;
+
+// LCD color during setting and countdown
+var baseColor = [0, 0, 128];
+
+// LCD colors while alarm is flashing
+var alarmColorOn = [128, 0, 0];
+var alarmColorOff = [128, 128, 128];
+
+// Application
 
 var pins = require("arduino101_pins");
 var gpio = require("gpio");
@@ -23,7 +34,7 @@ glcd.setFunction(funcConfig);
 glcd.setDisplayState(lcd.GLCD_DS_DISPLAY_ON);
 
 glcd.clear();
-glcd.setColor(0, 0, 128);
+glcd.setColor(baseColor[0], baseColor[1], baseColor[2]);
 glcd.setCursorPos(0, 0);
 glcd.print('Alarm:');
 glcd.setCursorPos(0, 1);
@@ -48,13 +59,18 @@ button.onchange = function (event) {
 
     debounce = true;
 
+    if (timer)
+        clearInterval(timer);
+
     minutes += minuteIncrement;
     seconds = 0;
     stopTime = perf.now() + ((minutes * 60)) * 1000;
-    console.log("Alarm set to", minutes, "minutes.");
+    var msg = "Alarm set for " + minutes + " minute";
+    if (minutes != 1)
+        msg += 's';
+    console.log(msg);
 
-    if (!timer)
-        timer = setInterval(updateLCD, 1000);
+    timer = setInterval(updateLCD, 1000);
 
     updateLCD();
 
@@ -78,7 +94,7 @@ function updateLCD() {
         return;
     }
 
-    var remain = (stopTime - time) / 1000 | 0;
+    var remain = (stopTime - time + 999) / 1000 | 0;
     minutes = remain / 60 | 0;
     seconds = remain - minutes * 60;
 
@@ -116,7 +132,8 @@ function toggleAlarm() {
     if (index < timings.length) {
         buzzer.write(alarm);
         setTimeout(toggleAlarm, timings[index++]);
-        glcd.setColor(alarm * 128, 0, 0);
+        color = alarm ? alarmColorOn : alarmColorOff;
+        glcd.setColor(color[0], color[1], color[2]);
     }
     else {
         if (alarm) {
@@ -124,6 +141,6 @@ function toggleAlarm() {
             alarm = 0;
             buzzer.write(false);
         }
-        glcd.setColor(0, 0, 128);
+        glcd.setColor(baseColor[0], baseColor[1], baseColor[2]);
     }
 };
