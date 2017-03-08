@@ -206,4 +206,6 @@ void zjs_call_callback(zjs_callback_id id, void* data, uint32_t sz);
  */
 uint8_t zjs_service_callbacks(void);
 
+uint32_t zjs_last_cb_time();
+
 #endif /* SRC_ZJS_CALLBACKS_H_ */

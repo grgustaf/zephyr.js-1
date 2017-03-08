@@ -468,6 +468,13 @@ void print_callbacks(void)
 #define print_callbacks() do {} while (0)
 #endif
 
+uint32_t last_cb_time;
+
+uint32_t zjs_last_cb_time()
+{
+    return last_cb_time;
+}
+
 void zjs_call_callback(zjs_callback_id id, void* data, uint32_t sz)
 {
     if (id == -1 || id > cb_size || !cb_map[id]) {
@@ -477,6 +484,7 @@ void zjs_call_callback(zjs_callback_id id, void* data, uint32_t sz)
         DBG_PRINT("callback %d has already been removed\n", id);
     }
     else {
+        last_cb_time = k_cycle_get_32();
         if (GET_TYPE(cb_map[id]->flags) == CALLBACK_TYPE_JS) {
             // Function list callback
             int i;
