@@ -1,7 +1,7 @@
 # Copyright (c) 2016-2017, Intel Corporation.
 
 # a place to add temporary defines to ZJS builds such as -DZJS_GPIO_MOCK
-ZJS_FLAGS :=
+ZJS_FLAGS := -DZJS_MEM_PROFILE
 
 OS := $(shell uname)
 

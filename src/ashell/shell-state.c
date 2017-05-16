@@ -34,6 +34,8 @@
 #endif
 #endif
 
+#include "../zjs_util.h"
+
 /**
  * Contains the pointer to the memory where the code will be uploaded
  * using the stub interface at file_code.c
