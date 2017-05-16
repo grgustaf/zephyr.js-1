@@ -113,6 +113,15 @@ uint32_t zjs_uncompress_16_to_32(uint16_t num);
 
 void zjs_print_error_message(jerry_value_t error, jerry_value_t func);
 
+//#ifdef ZJS_MEM_PROFILE
+/**
+ * Report largest chunks of memory that can be allocated.
+ *
+ * @param num  Maximum number of chunks to report.
+ */
+int zjs_profile_largest_chunks(int num);
+//#endif
+
 /**
  * Macro to declare a standard JerryScript external function in a shorter form
  *

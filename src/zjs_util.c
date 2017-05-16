@@ -608,6 +608,101 @@ int zjs_require_string_if_prop_map(jerry_value_t obj, const char *prop,
     return ZJS_VALUE_NOT_IN_MAP;
 }
 
+//#ifdef ZJS_MEM_PROFILE
+typedef struct zjs_chunk {
+    struct zjs_chunk *chunk;
+    uint32_t size;
+} zjs_chunk_t;
+
+int zjs_alloc_largest_chunk(zjs_chunk_t *chunk) {
+    // effects: 0 on success and writes new chunk info to *chunk
+    //    note: use plain malloc/free to avoid printing intentional errors
+    int size = 256;
+    int high = 0;
+    zjs_chunk_t *tmp;
+
+    // find highest power of 2
+    while (1) {
+        tmp = (zjs_chunk_t *)malloc(size * sizeof(zjs_chunk_t));
+        if (tmp) {
+            high = size;
+            size <<= 1;
+            free(tmp);
+        }
+        else if (high) {
+            break;
+        }
+        else {
+            size >>= 1;
+            if (!size) {
+                break;
+            }
+        }
+    }
+
+    if (!high) {
+        ERR_PRINT("couldn't allocate any memory\n");
+        return 1;
+    }
+
+    // find highest
+    size = high;
+    int diff = size >> 1;
+    while (1) {
+        tmp = (zjs_chunk_t *)malloc((size + diff) * sizeof(zjs_chunk_t));
+        diff /= 2;
+        free(tmp);
+        if (tmp) {
+            size += diff;
+        }
+        if (!diff) {
+            break;
+        }
+    }
+    tmp = (zjs_chunk_t *)malloc(size * sizeof(zjs_chunk_t));
+    if (!tmp) {
+        ERR_PRINT("couldn't alloc block size that previously worked\n");
+        return 1;
+    }
+    chunk->chunk = tmp;
+    chunk->size = size;
+    return 0;
+}
+
+int zjs_profile_largest_chunks(int num) {
+    // effects: Reports num largest chunks of memory able to be allocated
+    //    note: use plain malloc/free to avoid printing intentional errors
+    zjs_chunk_t largest;
+    int rval = zjs_alloc_largest_chunk(&largest);
+    if (rval) {
+        ZJS_PRINT("Memory profile: No chunk allocated\n");
+        return rval;
+    }
+
+    if (num > largest.size) {
+        ZJS_PRINT("Memory profile: Limiting results to %d\n", largest.size);
+        num = largest.size;
+    }
+
+    int i;
+    for (i = 0; i < num; ++i) {
+        rval = zjs_alloc_largest_chunk(largest.chunk + i);
+        if (rval) {
+            ZJS_PRINT("Memory profile: Could only allocate %d chunks\n", i);
+            break;
+        }
+    }
+
+    for (int j = 0; j < i; ++j) {
+        ZJS_PRINT("%d: %d-byte chunk allocated\n", j + 1,
+                  largest.chunk[j].size * sizeof(zjs_chunk_t));
+        free(largest.chunk[j].chunk);
+    }
+    free(largest.chunk);
+    return 0;
+}
+//#endif  // ZJS_MEM_PROFILE
+
 #ifndef ZJS_LINUX_BUILD
 #ifndef ZJS_ASHELL
 static zjs_port_sem block;

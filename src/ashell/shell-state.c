@@ -557,6 +557,7 @@ int32_t ashell_clear(char *buf)
 
 int32_t ashell_stop_javascript(char *buf)
 {
+    zjs_profile_largest_chunks(10);
     javascript_stop();
     return RET_OK;
 }
