@@ -617,14 +617,24 @@ typedef struct zjs_chunk {
 int zjs_alloc_largest_chunk(zjs_chunk_t *chunk) {
     // effects: 0 on success and writes new chunk info to *chunk
     //    note: use plain malloc/free to avoid printing intentional errors
-    int size = 256;
+    int size = 2048;
     int high = 0;
     zjs_chunk_t *tmp;
+
+    for (int k=0; k<100; k++) {
+        void *ptr = malloc(4096);
+        if (!ptr) {
+            ZJS_PRINT("Broke #%d\n", k);
+            break;
+        }
+        free(ptr);
+    }
 
     // find highest power of 2
     while (1) {
         tmp = (zjs_chunk_t *)malloc(size * sizeof(zjs_chunk_t));
         if (tmp) {
+            ZJS_PRINT("alloc'd %d\n", size * sizeof(zjs_chunk_t));
             high = size;
             size <<= 1;
             free(tmp);
@@ -641,7 +651,6 @@ int zjs_alloc_largest_chunk(zjs_chunk_t *chunk) {
     }
 
     if (!high) {
-        ERR_PRINT("couldn't allocate any memory\n");
         return 1;
     }
 
@@ -651,8 +660,8 @@ int zjs_alloc_largest_chunk(zjs_chunk_t *chunk) {
     while (1) {
         tmp = (zjs_chunk_t *)malloc((size + diff) * sizeof(zjs_chunk_t));
         diff /= 2;
-        free(tmp);
         if (tmp) {
+            free(tmp);
             size += diff;
         }
         if (!diff) {
@@ -662,8 +671,9 @@ int zjs_alloc_largest_chunk(zjs_chunk_t *chunk) {
     tmp = (zjs_chunk_t *)malloc(size * sizeof(zjs_chunk_t));
     if (!tmp) {
         ERR_PRINT("couldn't alloc block size that previously worked\n");
-        return 1;
+        return 2;
     }
+    ZJS_PRINT("allocing: %p %d\n", tmp, size * sizeof(zjs_chunk_t));
     chunk->chunk = tmp;
     chunk->size = size;
     return 0;
@@ -696,8 +706,11 @@ int zjs_profile_largest_chunks(int num) {
     for (int j = 0; j < i; ++j) {
         ZJS_PRINT("%d: %d-byte chunk allocated\n", j + 1,
                   largest.chunk[j].size * sizeof(zjs_chunk_t));
+        ZJS_PRINT("freeing: %p %d\n", largest.chunk[j].chunk,
+                  largest.chunk[j].size);
         free(largest.chunk[j].chunk);
     }
+    ZJS_PRINT("freeing: %p %d\n", largest.chunk, largest.size);
     free(largest.chunk);
     return 0;
 }
