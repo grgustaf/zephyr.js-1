@@ -323,9 +323,18 @@ void comms_print(const char *buf)
 */
 void comms_printf(const char *format, ...)
 {
+    const int MAX = 16;
     va_list args;
     va_start(args, format);
-    vfprintf(stdout, format, args);
+    char buf[MAX];
+    int n = vsnprintf(buf, MAX, format, args);
+    if (n) {
+        if (n >= MAX) {
+            comms_write_buf(buf, n);
+            n = sprintf(buf, "\nMax length exceeded: %d bytes lost\n", n - 255);
+            comms_write_buf(buf, n);
+        }
+    }
     va_end(args);
 }
 
