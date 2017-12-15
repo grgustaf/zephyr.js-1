@@ -44,7 +44,6 @@ matrix:
 cache:
   directories:
     - $ZEPHYR_SDK_INSTALL_DIR
-    - /usr/local/bin
 
 before_install:
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
