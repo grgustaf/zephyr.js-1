@@ -553,13 +553,14 @@ void zjs_loop_init(void);
 //     }
 #define ZJS_LIST_REMOVE(type, list, p)   \
     ({                                   \
+        ZJS_ASSERT(p, "null list item"); \
         u8_t removed = 0;                \
         type *cur = list;                \
         if (p == list) {                 \
             list = p->next;              \
             removed = 1;                 \
         } else {                         \
-            while (cur->next) {          \
+            while (cur) {                \
                 if (cur->next == p) {    \
                     cur->next = p->next; \
                     removed = 1;         \

@@ -433,22 +433,50 @@ static void test_list_macros()
     zjs_assert(l1->next == l2, "l1.next == l2");
     zjs_assert(l2->next == l3, "l2.next == l3");
 
-    // remove middle element
-    if (ZJS_LIST_REMOVE(test_list_t, head, l2)) {
-        zjs_assert(l1->next == l3, "middle element was removed");
-        should_be_null = ZJS_LIST_FIND(test_list_t, head, value, 2);
-        zjs_assert(should_be_null == NULL,
-                   "middle element value was not found");
-    } else {
-        zjs_assert(0, "element was not removed");
-    }
+    // remove first element
+    int removed = ZJS_LIST_REMOVE(test_list_t, head, l1);
+    zjs_assert(removed == 1, "head element removed");
+    zjs_assert(head == l2, "second element now head");
 
-    // test prepend
-    ZJS_LIST_PREPEND(test_list_t, head, l2);
-    zjs_assert(head == l2, "prepended node");
-    zjs_assert(ZJS_LIST_LENGTH(test_list_t, l2) == 3,
+    // attempt to remove missing element
+    removed = ZJS_LIST_REMOVE(test_list_t, head, l1);
+    zjs_assert(removed == 0, "element not removed");
+
+    // restore list with prepend
+    ZJS_LIST_PREPEND(test_list_t, head, l1);
+    zjs_assert(head == l1, "prepended node");
+    zjs_assert(ZJS_LIST_LENGTH(test_list_t, l1) == 3,
                "list length (prepend) correct");
 
+    // remove middle element
+    removed = ZJS_LIST_REMOVE(test_list_t, head, l2);
+    zjs_assert(removed == 1, "middle element removed");
+    zjs_assert(l1->next == l3, "third element follows first");
+
+    should_be_null = ZJS_LIST_FIND(test_list_t, head, value, 2);
+    zjs_assert(should_be_null == NULL, "middle element not found by value");
+
+    // prepend list with l2
+    ZJS_LIST_PREPEND(test_list_t, head, l2);
+    zjs_assert(head == l2, "second element prepended");
+    zjs_assert(l2->next == l1, "first element follows second");
+    zjs_assert(ZJS_LIST_LENGTH(test_list_t, head) == 3,
+               "reordered list length correct");
+
+    // remove last element
+    removed = ZJS_LIST_REMOVE(test_list_t, head, l3);
+    zjs_assert(removed == 1, "last element was removed");
+    zjs_assert(l1->next == NULL, "last element no longer present");
+    zjs_assert(ZJS_LIST_LENGTH(test_list_t, head) == 2,
+               "final list length correct");
+
+    // attempt to remove element from NULL list
+    test_list_t *nullptr = NULL;
+    removed = ZJS_LIST_REMOVE(test_list_t, nullptr, l1);
+    zjs_assert(removed == 0, "element not removed from null list");
+
+    // restore l3 with prepend
+    ZJS_LIST_PREPEND(test_list_t, head, l3);
     ZJS_LIST_FREE(test_list_t, head, test_free_list);
     zjs_assert(l1_freed, "l1 freed");
     zjs_assert(l2_freed, "l2 freed");
